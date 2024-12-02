@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -31,42 +33,49 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> orderedSongNames() {
-        return null;
+        return songs.stream().map(Song::getSongName).sorted(String::compareTo);
     }
 
     @Override
     public Stream<String> albumNames() {
-        return null;
+        return albums.keySet().stream();
     }
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return null;
+        return albums.entrySet().stream().filter(i -> i.getValue() == year).map(Entry::getKey);
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return -1;
+        return (int) songs.stream()
+            .filter(i -> i.getAlbumName().equals(Optional.of(albumName))).count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return -1;
+        return (int) songs.stream().filter(i -> i.getAlbumName().equals(Optional.empty()))
+            .count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return null;
+        return OptionalDouble.of(songs.stream().filter(i -> i.getAlbumName().equals(Optional.of(albumName)))
+            .mapToDouble(Song::getDuration).
+            average().getAsDouble());
     }
 
     @Override
     public Optional<String> longestSong() {
-        return null;
+        return songs.stream().max((i, j) -> Double.compare(i.getDuration(), j.getDuration())).map(Song::getSongName);
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return null;
+        return songs.stream().filter(x -> !x.getAlbumName().isEmpty()).
+            collect(Collectors.groupingBy(Song::getAlbumName, Collectors.summingDouble(Song::getDuration)))
+            .entrySet().stream()
+            .max((i, j) -> Double.compare(i.getValue(), j.getValue())).flatMap(Entry::getKey);
     }
 
     private static final class Song {

@@ -68,7 +68,7 @@ final class TestMusicGroup {
      */
     @Test
     void testOrderedSongNames() {
-        final List<String> result = Arrays.asList(new String[] {
+        final List<String> result = Arrays.asList(new String[] { //NOPMD: it's ok for the test
                 "Black Dog",
                 "Dazed and Confused",
                 "I Can't Quit You Baby",
@@ -87,7 +87,7 @@ final class TestMusicGroup {
      */
     @Test
     void testAlbumInYear() {
-        final List<String> result = Arrays.asList(new String[] { II, I });
+        final List<String> result = Arrays.asList(new String[] { II, I }); //NOPMD: it's ok for the test
         final List<String> actual = lz.albumInYear(1969).collect(toList());
         assertEquals(result, actual);
     }
@@ -97,7 +97,7 @@ final class TestMusicGroup {
      */
     @Test
     void testCountSongs() {
-        assertEquals(2, lz.countSongs(I));
+        assertEquals(2, lz.countSongs("I"));
     }
 
     /**
