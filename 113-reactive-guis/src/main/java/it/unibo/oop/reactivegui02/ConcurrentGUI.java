@@ -15,7 +15,6 @@ import javax.swing.SwingUtilities;
  */
 @SuppressWarnings("PMD.AvoidPrintStackTrace")
 public final class ConcurrentGUI extends JFrame {
-    
 
     private static final double WIDTH_PERC = 0.2;
     private static final double HEIGHT_PERC = 0.1;
@@ -24,7 +23,10 @@ public final class ConcurrentGUI extends JFrame {
     private final JButton down = new JButton("down");
     private final JButton stop = new JButton("stop");
 
-    public ConcurrentGUI(){
+    /**
+     * Public GUI constructor.
+     */
+    public ConcurrentGUI() {
         super();
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize((int) (screenSize.getWidth() * WIDTH_PERC), (int) (screenSize.getHeight() * HEIGHT_PERC));
@@ -53,14 +55,14 @@ public final class ConcurrentGUI extends JFrame {
         down.addActionListener(e -> {
             agent.goDown();
         });
-        
+
         agent.run();
     }
 
 
-    private class Agent implements Runnable {
-        final static Boolean UP = true;
-        final static Boolean DOWN = false;
+    private final class Agent implements Runnable {
+        private static final Boolean UP = true;
+        private static final Boolean DOWN = false;
 
         private volatile boolean stop;
         private int counter;
@@ -68,21 +70,23 @@ public final class ConcurrentGUI extends JFrame {
         private volatile boolean started;
 
         @Override
-        public void run() {
-            while(!started){}
-            while (!this.stop) {
-                try {final var nextText = Integer.toString(this.counter);
-                SwingUtilities.invokeLater(()->ConcurrentGUI.this.display.setText(nextText));
-                if( direction == UP) {
-                    counter++;
-                }else {
-                    counter--;
+        public synchronized void run() {
+            try {
+                while (!started) {}
+                while (!this.stop) {
+                    final var nextText = Integer.toString(this.counter);
+                    SwingUtilities.invokeLater(() -> ConcurrentGUI.this.display.setText(nextText));
+                    if (direction == UP) {
+                        counter++;
+                    } else {
+                        counter--;
+                    }
+                    Thread.sleep(100);
                 }
-                Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace(); //NOPMD
-                }
-            } 
+            } catch (InterruptedException e) {
+                e.printStackTrace(); //NOPMD
+            }
+            
         }
 
         /**
