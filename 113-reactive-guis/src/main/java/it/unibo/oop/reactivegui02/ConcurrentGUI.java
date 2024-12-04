@@ -3,6 +3,7 @@ package it.unibo.oop.reactivegui02;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.io.Serializable;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -15,7 +16,7 @@ import javax.swing.SwingUtilities;
  */
 @SuppressWarnings("PMD.AvoidPrintStackTrace")
 public final class ConcurrentGUI extends JFrame {
-
+    private static final long serialVersionUID = 1L;
     private static final double WIDTH_PERC = 0.2;
     private static final double HEIGHT_PERC = 0.1;
     private final JLabel display = new JLabel("0");
@@ -60,19 +61,18 @@ public final class ConcurrentGUI extends JFrame {
     }
 
 
-    private final class Agent implements Runnable {
+    private final class Agent implements Runnable, Serializable {
+        private static final long serialVersionUID = 1L;
         private static final Boolean UP = true;
         private static final Boolean DOWN = false;
 
         private volatile boolean stop;
         private int counter;
         private boolean direction;
-        private volatile boolean started;
 
         @Override
-        public synchronized void run() {
+        public void run() {
             try {
-                while (!started) {}
                 while (!this.stop) {
                     final var nextText = Integer.toString(this.counter);
                     SwingUtilities.invokeLater(() -> ConcurrentGUI.this.display.setText(nextText));
@@ -84,31 +84,28 @@ public final class ConcurrentGUI extends JFrame {
                     Thread.sleep(100);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace(); //NOPMD
+                e.printStackTrace();
             }
-            
         }
 
         /**
-         * Stops the counter,
+         * Stops the counter.
          */
         public void stopCounting() {
             this.stop = true;
         }
-        
+
         /**
          * Makes the counter count up.
          */
-        public void goUp(){
-            started = true;
+        public void goUp() {
             this.direction = UP;
         }
 
         /**
          * Makes the counter count down.
          */
-        public void goDown(){
-            started = true;
+        public void goDown() {
             this.direction = DOWN;
         }
     }

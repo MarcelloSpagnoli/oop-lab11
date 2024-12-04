@@ -3,6 +3,7 @@ package it.unibo.oop.reactivegui03;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 
 import javax.swing.JButton;
@@ -16,7 +17,7 @@ import javax.swing.SwingUtilities;
  */
 @SuppressWarnings("PMD.AvoidPrintStackTrace")
 public final class AnotherConcurrentGUI extends JFrame {
-    
+    private static final long serialVersionUID = 1L;
     private static final double WIDTH_PERC = 0.3;
     private static final double HEIGHT_PERC = 0.1;
     private final JLabel display = new JLabel("0");
@@ -24,10 +25,13 @@ public final class AnotherConcurrentGUI extends JFrame {
     private final JButton down = new JButton("down");
     private final JButton stop = new JButton("stop");
     private final JLabel timeDisplay = new JLabel("0.0");
-    private Agent agent = new Agent();
-    private TimeAgent timeAgent = new TimeAgent();
+    private final Agent agent = new Agent();
+    private final TimeAgent timeAgent = new TimeAgent();
 
-    public AnotherConcurrentGUI(){
+    /**
+     * Public constructor.
+     */
+    public AnotherConcurrentGUI() {
         super();
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize((int) (screenSize.getWidth() * WIDTH_PERC), (int) (screenSize.getHeight() * HEIGHT_PERC));
@@ -43,7 +47,7 @@ public final class AnotherConcurrentGUI extends JFrame {
         panel.add(timeDisplay);
         this.getContentPane().add(panel);
         this.setVisible(true);
-        
+
 
         stop.addActionListener(e -> {
             this.stop();
@@ -56,90 +60,86 @@ public final class AnotherConcurrentGUI extends JFrame {
         down.addActionListener(e -> {
             agent.goDown();
         });
-        
+
         new Thread(agent).start();
     }
 
-    private void stop(){
+    private void stop() {
         agent.stopCounting();
+        timeAgent.stopChrono();
         stop.setEnabled(false);
         up.setEnabled(false);
         down.setEnabled(false);
     }
 
 
-    private class Agent implements Runnable {
-        final static Boolean UP = true;
-        final static Boolean DOWN = false;
+    private final class Agent implements Runnable, Serializable {
+        private static final long serialVersionUID = 1L;
+        static final boolean UP = true;
+        static final boolean DOWN = false;
 
         private volatile boolean stop;
         private int counter;
-        private boolean direction;
-        private volatile boolean started;
+        private boolean direction = true;
 
         @Override
         public void run() {
-            while(!started){}
             new Thread(timeAgent).start();
             while (!this.stop) {
                 try {
                     final var nextText = Integer.toString(this.counter);
-                    SwingUtilities.invokeLater(()->AnotherConcurrentGUI.this.display.setText(nextText));
-                    if( direction == UP) {
+                    SwingUtilities.invokeLater(() -> AnotherConcurrentGUI.this.display.setText(nextText));
+                    if (direction == UP) {
                         counter++;
-                    }else {
+                    } else {
                         counter--;
                     }
                 Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    e.printStackTrace(); //NOPMD
+                    e.printStackTrace();
                 }
             } 
         }
 
-        /**
-         * Stops the counter,
-         */
-        public void stopCounting() {
+        private void stopCounting() {
             this.stop = true;
         }
-        
-        /**
-         * Makes the counter count up.
-         */
-        public void goUp(){
-            started = true;
+
+        private void goUp() {
             this.direction = UP;
         }
 
-        /**
-         * Makes the counter count down.
-         */
-        public void goDown(){
-            started = true;
+        private void goDown() {
             this.direction = DOWN;
         }
     }
 
-    private class TimeAgent implements Runnable {
-        private static double TIME_TO_ELAPSE_SECONDS = 10;
+    private final class TimeAgent implements Runnable, Serializable {
+        private static final long serialVersionUID = 1L;
+        private static final double TIME_TO_ELAPSE_SECONDS = 10;
+
+        private volatile boolean stop;
         @Override
         public void run() {
             try {
                 final long t0 = System.currentTimeMillis();
                 Double elapsed;
-                do  {
+                do {
                     final long t1 = System.currentTimeMillis();
-                    elapsed = (t1 - t0)/1000.0;
+                    elapsed = (t1 - t0) / 1000.0;
                     final String nextText = new DecimalFormat("0.0").format(elapsed);
-                    SwingUtilities.invokeLater(()-> 
+                    SwingUtilities.invokeLater(() -> 
                         AnotherConcurrentGUI.this.timeDisplay.setText(nextText));
                     Thread.sleep(10);
-                } while (elapsed < TIME_TO_ELAPSE_SECONDS);
+                } while (elapsed < TIME_TO_ELAPSE_SECONDS && !stop);
                 AnotherConcurrentGUI.this.stop();
             } catch (InterruptedException e) {
-                e.printStackTrace(); //NOPMD
+                e.printStackTrace();
             }
+        }
+
+        private void stopChrono() {
+            this.stop = true;
         }
     }
 }

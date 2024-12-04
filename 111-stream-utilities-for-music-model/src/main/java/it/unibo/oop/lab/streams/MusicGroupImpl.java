@@ -49,33 +49,42 @@ public final class MusicGroupImpl implements MusicGroup {
     @Override
     public int countSongs(final String albumName) {
         return (int) songs.stream()
-            .filter(i -> i.getAlbumName().equals(Optional.of(albumName))).count();
+            .filter(i -> i.getAlbumName().isPresent())
+            .filter(i -> i.getAlbumName().get().equals(albumName))
+            .count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return (int) songs.stream().filter(i -> i.getAlbumName().equals(Optional.empty()))
+        return (int) songs.stream()
+            .filter(i -> !i.getAlbumName().isPresent())
             .count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return OptionalDouble.of(songs.stream().filter(i -> i.getAlbumName().equals(Optional.of(albumName)))
-            .mapToDouble(Song::getDuration).
-            average().getAsDouble());
+        return songs.stream()
+            .filter(i -> i.getAlbumName().equals(Optional.of(albumName)))
+            .mapToDouble(Song::getDuration)
+            .average();
     }
 
     @Override
     public Optional<String> longestSong() {
-        return songs.stream().max((i, j) -> Double.compare(i.getDuration(), j.getDuration())).map(Song::getSongName);
+        return songs.stream()
+            .max((i, j) -> Double.compare(i.getDuration(), j.getDuration()))
+            .map(Song::getSongName);
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return songs.stream().filter(x -> !x.getAlbumName().isEmpty()).
+        return songs.stream()
+            .filter(x -> x.getAlbumName().isPresent()).
             collect(Collectors.groupingBy(Song::getAlbumName, Collectors.summingDouble(Song::getDuration)))
             .entrySet().stream()
-            .max((i, j) -> Double.compare(i.getValue(), j.getValue())).flatMap(Entry::getKey);
+            .max((i, j) -> Double.compare(i.getValue(), j.getValue()))
+            .get().getKey();
+            // or .flatMap(Entry::getKey);
     }
 
     private static final class Song {

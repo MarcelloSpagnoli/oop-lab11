@@ -1,7 +1,5 @@
 package it.unibo.oop.lab.streams;
 
-import static java.util.stream.Collectors.joining;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -44,20 +42,28 @@ public final class LambdaFilter extends JFrame {
          * Commands.
          */
         IDENTITY("No modifications", Function.identity()),
-        TO_LOWERCASE("To lowercase", (string) -> string.toLowerCase(Locale.getDefault())),
-        COUNT_CHARS("Count chars", (string) -> Long.toString(string.chars().count())),
-        COUNT_LINES("Count lines", (string) -> Long.toString(string.lines().count())),
-        SORT("Sorts words", (string) -> string.toLowerCase(Locale.getDefault()).lines().
-            flatMap(line -> Stream.of(line.split(" ")))
-            .filter(word -> !"".equals(word))
-            .sorted(String::compareTo).collect(joining("\n"))
+
+        TO_LOWERCASE("To lowercase", str -> str.toLowerCase(Locale.getDefault())),
+
+        COUNT_CHARS("Count chars", str -> Integer.toString(str.length())),
+
+        COUNT_LINES("Count lines", str -> Long.toString(str.lines().count())),
+
+        SORT("Sort words", str -> str.toLowerCase(Locale.getDefault()).lines()
+            .flatMap(line -> Stream.of(line.split("\\W")))
+            .filter(i -> !"".equals(i))
+            .sorted(String::compareTo)
+            .collect(Collectors.joining("\n"))
         ),
 
-        COUNT_OCCURENCES("Count words occurrences", (string) -> string.toLowerCase(Locale.getDefault()).lines().
-            flatMap(line -> Stream.of(line.split(" ")))
+        COUNT_OCCURENCES("Count words occurrences", str -> str.toLowerCase(Locale.getDefault()).lines()
+            .flatMap(line -> Stream.of(line.split("\\W")))
+            .filter(i -> !"".equals(i))
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-            .entrySet().stream().map(i -> i.getKey() + " -> " + i.getValue())
-            .collect(joining("\n"))
+            .entrySet()
+            .stream()
+            .map(i -> i.getKey() + " -> " + i.getValue())
+            .collect(Collectors.joining("\n"))
         );
 
         private final String commandName;
